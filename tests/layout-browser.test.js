@@ -21,16 +21,22 @@ test('real UI: consistent card insets, no horizontal overflow at phone and deskt
     });
     await page.goto('http://sqlingo.test/');
     await page.locator('[data-exam="0"]').waitFor();
+    assert.equal(await page.locator('.trail-welcome').count(),0);
+    assert.equal(await page.locator('.offline-status').count(),0);
+    assert.equal(await page.locator('.learning-world').count(),7);
+    assert.equal(await page.locator('.world-route').count(),7);
     async function verify(label){
       const result=await page.evaluate(()=>{
         const cards=[...document.querySelectorAll('.card')].map(el=>({text:el.innerText.slice(0,50),left:parseFloat(getComputedStyle(el).paddingLeft),right:parseFloat(getComputedStyle(el).paddingRight),top:parseFloat(getComputedStyle(el).paddingTop),bottom:parseFloat(getComputedStyle(el).paddingBottom)}));
+        const banners=[...document.querySelectorAll('.module-banner')].map(el=>{const a=el.querySelector('.module-copy').getBoundingClientRect(),b=el.querySelector('.download').getBoundingClientRect(),r=el.getBoundingClientRect();return a.right<=b.left+1&&Math.abs((a.top+a.bottom-b.top-b.bottom)/2)<2&&b.right<=r.right-10;});
         const violations=cards.filter(x=>Math.min(x.left,x.right,x.top,x.bottom)<16);
         const rows=[...document.querySelectorAll('.card.card-row')].map(el=>{const r=el.getBoundingClientRect();return [...el.children].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left+15&&b.right<=r.right-15;});});
-        return {count:cards.length,violations,rows,scroll:document.documentElement.scrollWidth,width:window.innerWidth};
+        return {count:cards.length,violations,rows,banners,scroll:document.documentElement.scrollWidth,width:window.innerWidth};
       });
       assert.ok(result.count>0,label+' must have cards');
       assert.deepEqual(result.violations,[],label+' card insets');
       assert.ok(result.rows.every(Boolean),label+' row children respect insets');
+      assert.ok(result.banners.every(Boolean),label+' download button stays inline');
       assert.ok(result.scroll<=result.width+1,label+' page horizontal overflow: '+result.scroll+' > '+result.width);
     }
     for(const width of [320,390,768,1280]){

@@ -138,3 +138,52 @@ nav button:not(.active):hover { background: #f2f7f3; }
 @media(prefers-reduced-motion:reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Illustrated adventure worlds. Controls remain real HTML, never baked into an image. */
+.learning-world{--world-ink:#096b48;--world-pale:#e9f7ea;--world-route:#b4d8b7;--world-accent:#168a56;--world-scene:url('/art/day.webp');margin-block:24px 34px;}
+.world-amber{--world-ink:#76501a;--world-pale:#fff5dc;--world-route:#e4d2a1;--world-accent:#a66c15;}
+.world-teal{--world-ink:#075a62;--world-pale:#e6f6f3;--world-route:#abd7d0;--world-accent:#087d7c;}
+.world-violet{--world-ink:#4e377e;--world-pale:#f2ecfa;--world-route:#c9bae7;--world-accent:#7351a7;--world-scene:url('/art/night.webp');}
+.world-blue{--world-ink:#244d84;--world-pale:#eaf2fb;--world-route:#b5cde8;--world-accent:#3974b5;--world-scene:url('/art/night.webp');}
+.world-rose{--world-ink:#794744;--world-pale:#fbefeb;--world-route:#e4c5bc;--world-accent:#aa6756;}
+.world-indigo{--world-ink:#343b79;--world-pale:#eef0fd;--world-route:#bdc5eb;--world-accent:#525ca7;--world-scene:url('/art/night.webp');}
+.module-banner{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:126px;margin:0 0 12px;padding:var(--card-inset);overflow:hidden;background:var(--world-ink);border:1px solid #ffffff26;box-shadow:0 4px 0 color-mix(in srgb,var(--world-ink) 75%,#000);}
+.module-banner::before{content:'';position:absolute;inset:0;z-index:-1;background-image:linear-gradient(90deg,var(--world-ink) 0%,color-mix(in srgb,var(--world-ink) 90%,transparent) 35%,color-mix(in srgb,var(--world-ink) 50%,transparent) 100%),var(--world-scene);background-size:cover;background-position:center right;}
+.module-copy{min-width:0;flex:1 1 auto;text-shadow:0 1px 3px #0004;}
+.module-copy .eyebrow{display:block;font-size:11px;letter-spacing:1.5px;color:#fff;}
+.module-copy h2{font-size:clamp(18px,4.6vw,25px);line-height:1.15;margin:7px 0;overflow-wrap:anywhere;color:#fff;}
+.module-copy p{font-size:14px;line-height:1.3;color:#fff;}
+.module-banner .download{flex:0 0 auto;align-self:center;max-width:45%;margin:0;padding:12px 14px;background:#fff;color:var(--world-ink);border:1px solid #fff;box-shadow:0 3px 0 #0003;min-height:44px;text-align:center;font-size:13px;line-height:1.2;}
+.module-banner .download:hover:not(:disabled){background:#e8f9e9;}
+.module-banner .download:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #0003;}
+.module-banner .download:disabled{opacity:.75;background:#e0e6df;color:#41564b;}
+.world-caption{display:flex;justify-content:center;align-items:center;gap:10px;padding:8px;color:var(--world-ink);font-size:12px;font-weight:800;letter-spacing:.6px;text-align:center;}
+.world-caption span{color:var(--world-accent);}
+.world-path{display:block;position:relative;isolation:isolate;padding:12px 0;border:1px solid color-mix(in srgb,var(--world-route) 60%,white);border-radius:24px;background:radial-gradient(ellipse at 10% 20%,#ffffffb0,transparent 50%),radial-gradient(ellipse at 90% 80%,#ffffffb0,transparent 50%),var(--world-pale);overflow:hidden;}
+.world-route{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:1;pointer-events:none;overflow:visible;}
+.world-route path{fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.route-base{stroke:var(--world-route);stroke-width:9;opacity:.8;}
+.route-dots{stroke:#fff;stroke-width:2.5;stroke-dasharray:3 11;opacity:.9;}
+.world-row{height:124px;position:relative;display:flex;justify-content:center;align-items:flex-start;}
+.world-vista{position:absolute;inset:-20px 0 -20px;z-index:0;background-image:url('/art/day.webp');background-size:cover;background-position:center right;opacity:.38;mask-image:linear-gradient(transparent,#000 28%,#000 72%,transparent);pointer-events:none;}
+.world-row[data-scene="night"] .world-vista{background-image:url('/art/night.webp');opacity:.28;}
+.world-node{z-index:2;width:156px;max-width:48%;transform:translateX(var(--offset));animation:node-in .38s both;}
+.world-node::after{display:none;}
+.world-node button{width:72px;height:68px;flex-shrink:0;border:2px solid #ffffffbd;}
+.world-node button.ready{background:var(--world-accent);box-shadow:0 7px 0 var(--world-ink);}
+.world-node button.done{background:#eab43b;box-shadow:0 7px 0 #b6841a;}
+.world-node button.ready:disabled{background:#dce5df;box-shadow:0 7px 0 #bbc8c1;}
+.world-node .node-title{display:block;max-width:100%;color:#18332a;font-weight:750;line-height:1.2;font-size:13px;padding:5px 9px;border-radius:10px;background:#fffffff0;box-shadow:0 1px 4px #153d2210;overflow-wrap:anywhere;}
+.world-mascot{position:absolute;z-index:1;top:6px;width:clamp(70px,19vw,112px);height:auto;object-fit:contain;pointer-events:none;filter:drop-shadow(0 7px 6px #122e2b29);animation:mascot-float 3.8s ease-in-out infinite;}
+.world-mascot.left{left:calc(50% - 135px);}
+.world-mascot.right{right:calc(50% - 135px);}
+.world-spark{position:absolute;z-index:1;top:17px;left:10%;color:#d7a223;font-size:22px;animation:world-twinkle 3.2s ease-in-out infinite;pointer-events:none;}
+.world-row:nth-of-type(even) .world-spark{left:auto;right:9%;animation-delay:.8s;}
+.module-exam{margin:12px 0 0;}
+.mascot-dialog img{mix-blend-mode:normal;filter:drop-shadow(0 4px 4px #0b3d2420);}
+.sync-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:#edf5ef;color:#275844;font-weight:650;font-size:13px;margin-bottom:12px;}
+.sync-strip button{min-height:36px;padding:8px 10px;}
+@keyframes world-twinkle{0%,100%{opacity:.45;transform:scale(.82)}50%{opacity:1;transform:scale(1.18)}}
+@media(min-width:550px){.module-banner{min-height:145px}.world-mascot.left{left:calc(50% - 185px)}.world-mascot.right{right:calc(50% - 185px)}.world-vista{background-size:100% auto;}}
+@media(max-width:380px){.module-banner{padding:14px;gap:8px;min-height:112px}.module-banner .download{padding:10px;max-width:43%;font-size:12px}.module-copy h2{font-size:18px}.module-copy p{font-size:12px}.world-mascot{width:70px}.world-mascot.left{left:calc(50% - 125px)}.world-mascot.right{right:calc(50% - 125px)}}
+@media(prefers-reduced-motion:reduce){.world-mascot,.world-spark,.world-node,.world-node button{animation:none!important;transition:none!important}}
