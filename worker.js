@@ -9,6 +9,7 @@ await db.exec(seed);
 const blocked=/\b(pg_sleep|generate_series|repeat|set_config|pg_read_file|pg_write_file|lo_import|lo_export)\s*\(/i;
 if(blocked.test(sql))throw Error('Função indisponível no sandbox.');
 let expected,actual;
+if(lesson.playground){if(!/^\s*(SELECT|WITH|EXPLAIN)\b/i.test(sql)||/;\s*\S/.test(sql.trim()))throw Error('Playground: use SELECT, WITH ou EXPLAIN em uma única consulta.');await db.exec('BEGIN READ ONLY; SET LOCAL statement_timeout=3000;');actual=await db.query(sql,[],{rowMode:'array'});return {columns:actual.fields.map(f=>f.name),rows:actual.rows.slice(0,100),count:actual.rows.length};}
 if(lesson.verify){
 if(!/^\s*(CREATE|ALTER|INSERT|UPDATE|DELETE|TRUNCATE|DROP|BEGIN)\b/i.test(sql))throw Error('Use o comando de manipulação solicitado.');
 const ref=new PGlite();

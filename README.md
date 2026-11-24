@@ -3,7 +3,7 @@
 PWA mobile-first em português. 94 lições em sete módulos de PostgreSQL, com dados fictícios de geração de energia. Login e persistência de progresso em PostgreSQL; PGlite em workers efêmeros para consultas educacionais (incluindo DDL/DML). 
 
 ## Recursos
-Trilha progressiva, aquecimento de completar código, SQL real, revisão de erros, XP inicial e revisão diária, metas e missões, corações (não bloqueiam estudo), calendário de ofensiva, conquistas, gemas, proteção de ofensiva, ranking semanal com opção de privacidade, amizade com convites, incentivos e desafio cooperativo semanal, alteração de senha.
+Diagnóstico de cinco questões, provas práticas de três desafios por módulo, revisão espaçada (1/3/7/14/30 dias), laboratório SQL somente leitura, trilha progressiva, aquecimento de completar código, SQL real, revisão de erros, XP inicial e revisão diária, metas e missões, corações (não bloqueiam estudo), calendário de ofensiva, conquistas, gemas, proteção de ofensiva, ranking semanal com opção de privacidade, amizade com convites, incentivos e desafio cooperativo semanal, alteração de senha.
 
 ## Executar
 Node 22, npm install, DATABASE_URL apontando para um PostgreSQL dedicado, npm start. NODE_ENV=production exige HTTPS. Railway: Dockerfile, /health. npm test executa soluções das 94 lições. Migrações aditivas e IDs históricos preservados. O progresso é sincronizado online. 
