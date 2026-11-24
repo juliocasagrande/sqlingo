@@ -37,3 +37,7 @@ jobs:
           node-version: 22
       - run: npm install
       - run: node --test tests/integration.test.js
+      - run: npm run build
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/offline-browser.test.js
