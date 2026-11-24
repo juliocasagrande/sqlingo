@@ -1,9 +1,10 @@
 {
   "name": "sqlingo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/course.test.js"
   },
   "engines": {
     "node": ">=22"
