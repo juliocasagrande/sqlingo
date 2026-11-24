@@ -1,5 +1,3 @@
 # SQLingo
 
-Aprenda SQL com desafios práticos e trilhas gamificadas em português.
-
-Projeto independente, mobile-first, com progresso individual e estudo de PostgreSQL.
+PWA mobile-first em português para aprender SQL com exercícios de geração de energia fictícios. MVP com 26 lições, login por usuário, progresso, ofensiva, ranking semanal e amizades. Node.js, Express, PostgreSQL e PGlite isolado por worker. Configure DATABASE_URL e NODE_ENV=production; npm install && npm start. Consultas educacionais SELECT/WITH são executadas em bancos efêmeros; não têm acesso ao banco de contas. A interface pode ser instalada como PWA, mas as lições e sincronização exigem internet. Não há recuperação de senha por e-mail nesta versão. Ranking usa fuso America/Sao_Paulo. A trilha de DDL/DML e otimização avançada ainda precisa ser expandida. Não use senhas reais de outros serviços.\n
