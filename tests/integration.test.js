@@ -8,9 +8,9 @@ let healthy=false;for(let i=0;i<40;i++){try{if((await fetch(base+'/health')).ok)
 const course=await call('/api/lessons');assert.equal(course.body.lessons.length,94);assert.ok(!('answer' in course.body.lessons[0]));assert.equal((await call('/api/me')).status,401);
 const password='TestPasswordOnly123!';
 const a=await call('/api/auth/register',{handle:'test_learner_a',password}),b=await call('/api/auth/register',{handle:'test_learner_b',password});assert.equal(a.status,200);assert.equal(b.status,200);
-const A=a.cookie,B=b.cookie;let m=(await call('/api/me',undefined,A)).body;assert.equal(m.xp,0);assert.equal(m.hearts,5);
+const A=a.cookie,B=b.cookie;const pack=await call('/api/offline/0',undefined,A);assert.equal(pack.status,200);assert.equal(pack.body.lessons.length,12);assert.equal((await call('/api/offline/0')).status,401);let m=(await call('/api/me',undefined,A)).body;assert.equal(m.xp,0);assert.ok(!('hearts' in m));
 assert.equal((await call('/api/run',{id:1,sql:'SELECT unidade,potencia_mw FROM geracao_energia'},A)).status,403);
-const bad=await call('/api/run',{id:0,sql:'SELECT id FROM geracao_energia'},A);assert.equal(bad.body.correct,false);m=(await call('/api/me',undefined,A)).body;assert.equal(m.hearts,4);assert.equal(m.errors[0].lesson,0);
+const bad=await call('/api/run',{id:0,sql:'SELECT id FROM geracao_energia'},A);assert.equal(bad.body.correct,false);m=(await call('/api/me',undefined,A)).body;assert.ok(!('hearts' in m));assert.equal(m.errors[0].lesson,0);
 const ok=await call('/api/run',{id:0,sql:'SELECT * FROM geracao_energia'},A);assert.equal(ok.body.correct,true);assert.equal(ok.body.xp,50);m=(await call('/api/me',undefined,A)).body;assert.equal(m.xp,50);assert.equal(m.streak,1);assert.deepEqual(m.done,[0]);assert.equal(m.errors.length,0);
 assert.equal((await call('/api/run',{id:0,sql:'SELECT * FROM geracao_energia'},A)).body.xp,0);
 assert.equal((await call('/api/run',{id:1,sql:'SELECT unidade,potencia_mw FROM geracao_energia'},A)).body.xp,50);
