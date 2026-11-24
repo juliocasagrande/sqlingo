@@ -10,3 +10,5 @@ Node 22, npm install, DATABASE_URL apontando para um PostgreSQL dedicado, npm st
 
 ## Limites
 PWA instalável, não aplicativo binário de loja; execução de SQL e sincronização requerem internet. Não há equivalência integral com Duolingo, pagamentos, notificações push, áudio, recuperação por e-mail ou promoção automática entre ligas. Validação por estado/resultado no sandbox não prova equivalência universal; EXPLAIN tem validação textual. Não há dados industriais reais. Ofensiva usa fuso America/Sao_Paulo; proteção cobre um dia perdido após retornar ao app, não períodos longos de ausência. 
+
+GitHub Actions executa teste de sintaxe, soluções de referência e integração em PostgreSQL descartável. Conquistas são permanentes após desbloqueio.
