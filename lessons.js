@@ -1,4 +1,4 @@
-export const seed = `CREATE TABLE usinas(id int primary key,nome text);
+const originalSeed = `CREATE TABLE usinas(id int primary key,nome text);
 INSERT INTO usinas VALUES (1,'Jupiá'),(2,'Rosana'),(3,'Ilha Solteira');
 CREATE TABLE geracao_energia(id int primary key,usina_id int,unidade text,potencia_mw int,temperatura_c int);
 INSERT INTO geracao_energia VALUES (1,1,'UG01',95,65),(2,1,'UG02',102,78),(3,1,'UG03',82,72),(4,2,'UG01',75,71),(5,3,'UG01',170,68),(6,3,'UG02',165,82),(7,2,'UG02',0,NULL);`;
@@ -33,3 +33,651 @@ const rows=[
 [6,'Camada Gold','A camada Gold agrega indicadores de negócio.','SELECT usina_id,AVG(potencia_mw) FROM geracao_energia GROUP BY usina_id;','Retorne nome da usina e soma da potência, da maior para a menor.','SELECT u.nome,SUM(g.potencia_mw) FROM usinas u JOIN geracao_energia g ON u.id=g.usina_id GROUP BY u.nome ORDER BY SUM(g.potencia_mw) DESC','JOIN, GROUP BY e ORDER BY.',true]
 ];
 export const lessons=rows.map(([module,title,theory,example,task,answer,hint,ordered],id)=>({id,module,title,theory,example,task,answer,hint,ordered:!!ordered}));
+export const extraSeed="CREATE TABLE equipamentos(id int primary key,usina_id int,nome text); INSERT INTO equipamentos VALUES(1,1,'Turbina'),(2,1,'Gerador'),(3,3,'Transformador'),(4,3,'Regulador');\nCREATE TABLE eventos(id int primary key,equipamento_id int,tipo text); INSERT INTO eventos VALUES(1,1,'Alarme'),(2,1,'Falha'),(3,2,'Alarme'),(4,NULL,'Geral'),(5,99,'Órfão');\nCREATE TABLE turnos(turno text); INSERT INTO turnos VALUES('A'),('B'),('C');\nCREATE TABLE medicoes(id int primary key,equipamento_id int,instante timestamp,potencia_mw int); INSERT INTO medicoes VALUES(1,1,'2026-01-01 08:00',90),(2,1,'2026-01-01 08:30',95),(3,1,'2026-01-01 08:30',96),(4,1,'2026-01-01 09:00',100),(5,2,'2026-01-01 08:00',-5),(6,2,'2026-01-01 09:00',NULL),(7,2,'2026-01-02 08:00',120);\nCREATE TABLE treino(id int primary key,nome text,valor int); INSERT INTO treino VALUES(1,'A',10),(2,'B',20),(3,'C',30);";
+export const seed=originalSeed+'\n'+extraSeed;
+const extra=[
+  [
+    0,
+    "NOT",
+    "NOT inverte uma condição.",
+    "SELECT * FROM geracao_energia WHERE NOT potencia_mw = 0;",
+    "Retorne todos os campos das unidades que não estão paradas.",
+    "SELECT * FROM geracao_energia WHERE NOT potencia_mw=0",
+    "Use NOT ou <>."
+  ],
+  [
+    0,
+    "LIKE",
+    "LIKE usa % para qualquer sequência e _ para um caractere.",
+    "SELECT nome FROM usinas WHERE nome LIKE 'R%';",
+    "Retorne nomes das usinas que começam com I.",
+    "SELECT nome FROM usinas WHERE nome LIKE 'I%'",
+    "Use I%."
+  ],
+  [
+    0,
+    "Desafio de fundamentos",
+    "Combine filtros, projeção e ordenação.",
+    "SELECT unidade FROM geracao_energia WHERE potencia_mw>0 ORDER BY id;",
+    "Retorne id e potência das unidades acima de 80 MW e com temperatura preenchida, da maior potência para a menor.",
+    "SELECT id,potencia_mw FROM geracao_energia WHERE potencia_mw>80 AND temperatura_c IS NOT NULL ORDER BY potencia_mw DESC",
+    "Combine WHERE, AND e ORDER BY.",
+    true
+  ],
+  [
+    1,
+    "MIN e MAX",
+    "MIN e MAX retornam extremos.",
+    "SELECT MIN(potencia_mw) FROM geracao_energia;",
+    "Retorne a menor e a maior temperatura, nessa ordem.",
+    "SELECT MIN(temperatura_c),MAX(temperatura_c) FROM geracao_energia",
+    "Use duas agregações."
+  ],
+  [
+    1,
+    "COUNT e NULL",
+    "COUNT(coluna) ignora nulos, COUNT(*) não.",
+    "SELECT COUNT(temperatura_c) FROM geracao_energia;",
+    "Retorne a quantidade de registros e de temperaturas preenchidas.",
+    "SELECT COUNT(*),COUNT(temperatura_c) FROM geracao_energia",
+    "Compare as duas contagens."
+  ],
+  [
+    1,
+    "Agregação com WHERE",
+    "WHERE filtra antes de GROUP BY.",
+    "SELECT AVG(potencia_mw) FROM geracao_energia WHERE potencia_mw>0;",
+    "Retorne usina_id e potência média apenas das unidades operando.",
+    "SELECT usina_id,AVG(potencia_mw) FROM geracao_energia WHERE potencia_mw>0 GROUP BY usina_id",
+    "Filtre a potência antes de agrupar."
+  ],
+  [
+    1,
+    "Desvio padrão",
+    "STDDEV_POP mede dispersão da população.",
+    "SELECT STDDEV_POP(potencia_mw) FROM geracao_energia;",
+    "Calcule o desvio padrão populacional da temperatura.",
+    "SELECT STDDEV_POP(temperatura_c) FROM geracao_energia",
+    "Use STDDEV_POP."
+  ],
+  [
+    1,
+    "Desafio de agregação",
+    "HAVING e ORDER BY combinam análise e classificação.",
+    "SELECT usina_id,COUNT(*) FROM geracao_energia GROUP BY usina_id;",
+    "Retorne usina_id e soma da potência, apenas somas acima de 100, da maior para a menor.",
+    "SELECT usina_id,SUM(potencia_mw) FROM geracao_energia GROUP BY usina_id HAVING SUM(potencia_mw)>100 ORDER BY SUM(potencia_mw) DESC",
+    "HAVING filtra o total.",
+    true
+  ],
+  [
+    2,
+    "Chaves relacionais",
+    "Chaves estrangeiras apontam para chaves de outra tabela.",
+    "SELECT id,nome FROM usinas;",
+    "Retorne id de cada equipamento e sua chave usina_id.",
+    "SELECT id,usina_id FROM equipamentos",
+    "Observe as duas chaves."
+  ],
+  [
+    2,
+    "RIGHT JOIN",
+    "RIGHT JOIN mantém todas as linhas à direita.",
+    "SELECT u.nome,e.nome FROM equipamentos e RIGHT JOIN usinas u ON e.usina_id=u.id;",
+    "Retorne nome da usina e nome de equipamento, incluindo usinas sem equipamento, usando RIGHT JOIN.",
+    "SELECT u.nome,e.nome FROM equipamentos e RIGHT JOIN usinas u ON e.usina_id=u.id",
+    "Usinas devem estar à direita."
+  ],
+  [
+    2,
+    "FULL OUTER JOIN",
+    "FULL JOIN preserva não correspondências em ambos os lados.",
+    "SELECT e.id,a.id FROM equipamentos e FULL JOIN eventos a ON e.id=a.equipamento_id;",
+    "Retorne id do equipamento e id do evento, incluindo não correspondências.",
+    "SELECT e.id,a.id FROM equipamentos e FULL OUTER JOIN eventos a ON e.id=a.equipamento_id",
+    "Use FULL OUTER JOIN."
+  ],
+  [
+    2,
+    "CROSS JOIN",
+    "CROSS JOIN gera o produto cartesiano.",
+    "SELECT u.nome,t.turno FROM usinas u CROSS JOIN turnos t;",
+    "Conte todas as combinações entre usinas e turnos.",
+    "SELECT COUNT(*) FROM usinas CROSS JOIN turnos",
+    "Não há ON."
+  ],
+  [
+    2,
+    "JOIN de três tabelas",
+    "Encadeie relacionamentos por suas chaves.",
+    "SELECT e.nome,u.nome FROM equipamentos e JOIN usinas u ON e.usina_id=u.id;",
+    "Retorne id do evento, nome do equipamento e nome da usina, somente eventos associados.",
+    "SELECT a.id,e.nome,u.nome FROM eventos a JOIN equipamentos e ON a.equipamento_id=e.id JOIN usinas u ON e.usina_id=u.id",
+    "Relacione evento ao equipamento e depois à usina."
+  ],
+  [
+    2,
+    "JOIN com filtro",
+    "Filtre depois de relacionar as tabelas.",
+    "SELECT u.nome,g.id FROM usinas u JOIN geracao_energia g ON u.id=g.usina_id WHERE g.potencia_mw>100;",
+    "Retorne nome da usina e id de unidade com temperatura acima de 75.",
+    "SELECT u.nome,g.id FROM usinas u JOIN geracao_energia g ON u.id=g.usina_id WHERE g.temperatura_c>75",
+    "Use WHERE na tabela de geração."
+  ],
+  [
+    2,
+    "Anti-join",
+    "LEFT JOIN com IS NULL identifica ausência.",
+    "SELECT e.id FROM equipamentos e LEFT JOIN eventos a ON e.id=a.equipamento_id WHERE a.id IS NULL;",
+    "Retorne nome das usinas sem equipamentos.",
+    "SELECT u.nome FROM usinas u LEFT JOIN equipamentos e ON u.id=e.usina_id WHERE e.id IS NULL",
+    "Teste a chave da tabela direita."
+  ],
+  [
+    2,
+    "Cardinalidade",
+    "Relacionamentos 1:N multiplicam linhas.",
+    "SELECT e.id,COUNT(a.id) FROM equipamentos e LEFT JOIN eventos a ON e.id=a.equipamento_id GROUP BY e.id;",
+    "Retorne ids de equipamentos com mais de um evento.",
+    "SELECT equipamento_id FROM eventos WHERE equipamento_id IS NOT NULL GROUP BY equipamento_id HAVING COUNT(*)>1",
+    "Agrupe pela chave estrangeira."
+  ],
+  [
+    2,
+    "Auto-relacionamento",
+    "SELF JOIN relaciona linhas da mesma tabela.",
+    "SELECT a.id,b.id FROM geracao_energia a JOIN geracao_energia b ON a.usina_id=b.usina_id AND a.id<b.id;",
+    "Retorne pares de ids de equipamentos da mesma usina, sem repetir pares nem comparar consigo.",
+    "SELECT a.id,b.id FROM equipamentos a JOIN equipamentos b ON a.usina_id=b.usina_id AND a.id<b.id",
+    "Use aliases e a.id < b.id."
+  ],
+  [
+    2,
+    "Desafio de JOIN",
+    "Agregue ocorrências sem perder entidades sem eventos.",
+    "SELECT u.nome,COUNT(e.id) FROM usinas u LEFT JOIN equipamentos e ON u.id=e.usina_id GROUP BY u.nome;",
+    "Retorne nome de todas as usinas e quantidade de eventos associados a seus equipamentos, inclusive zero.",
+    "SELECT u.nome,COUNT(a.id) FROM usinas u LEFT JOIN equipamentos e ON u.id=e.usina_id LEFT JOIN eventos a ON e.id=a.equipamento_id GROUP BY u.nome",
+    "Encadeie dois LEFT JOIN."
+  ],
+  [
+    3,
+    "EXISTS",
+    "EXISTS testa se a subconsulta produz uma linha.",
+    "SELECT nome FROM usinas u WHERE EXISTS(SELECT 1 FROM equipamentos e WHERE e.usina_id=u.id);",
+    "Retorne nome dos equipamentos com pelo menos um evento.",
+    "SELECT nome FROM equipamentos e WHERE EXISTS(SELECT 1 FROM eventos a WHERE a.equipamento_id=e.id)",
+    "Correlacione a subconsulta."
+  ],
+  [
+    3,
+    "NOT EXISTS",
+    "NOT EXISTS encontra ausência de correspondência.",
+    "SELECT nome FROM usinas u WHERE NOT EXISTS(SELECT 1 FROM equipamentos e WHERE e.usina_id=u.id);",
+    "Retorne ids de equipamentos sem eventos.",
+    "SELECT id FROM equipamentos e WHERE NOT EXISTS(SELECT 1 FROM eventos a WHERE a.equipamento_id=e.id)",
+    "Use NOT EXISTS."
+  ],
+  [
+    3,
+    "Subconsulta correlacionada",
+    "Uma subconsulta correlacionada usa a linha externa.",
+    "SELECT id,(SELECT COUNT(*) FROM eventos a WHERE a.equipamento_id=e.id) FROM equipamentos e;",
+    "Retorne id da usina e potência máxima de suas unidades usando subconsulta.",
+    "SELECT id,(SELECT MAX(potencia_mw) FROM geracao_energia g WHERE g.usina_id=u.id) FROM usinas u",
+    "Use o id da linha externa."
+  ],
+  [
+    3,
+    "NULLIF",
+    "NULLIF retorna NULL quando os argumentos são iguais.",
+    "SELECT NULLIF(0,0);",
+    "Retorne id e potência, convertendo zero em NULL.",
+    "SELECT id,NULLIF(potencia_mw,0) FROM geracao_energia",
+    "Use NULLIF."
+  ],
+  [
+    3,
+    "UNION",
+    "UNION combina resultados e elimina duplicados.",
+    "SELECT id FROM usinas UNION SELECT usina_id FROM equipamentos;",
+    "Retorne os ids de usinas cadastradas ou referenciadas por equipamentos, sem repetição.",
+    "SELECT id FROM usinas UNION SELECT usina_id FROM equipamentos",
+    "As colunas devem ser compatíveis."
+  ],
+  [
+    3,
+    "UNION ALL",
+    "UNION ALL mantém duplicados.",
+    "SELECT usina_id FROM equipamentos UNION ALL SELECT usina_id FROM geracao_energia;",
+    "Retorne todas as referências a usinas em equipamentos e geração, incluindo duplicatas.",
+    "SELECT usina_id FROM equipamentos UNION ALL SELECT usina_id FROM geracao_energia",
+    "Não use apenas UNION."
+  ],
+  [
+    3,
+    "INTERSECT",
+    "INTERSECT retorna elementos comuns.",
+    "SELECT id FROM usinas INTERSECT SELECT usina_id FROM equipamentos;",
+    "Retorne ids de usina presentes tanto em equipamentos quanto em geração.",
+    "SELECT usina_id FROM equipamentos INTERSECT SELECT usina_id FROM geracao_energia",
+    "Use INTERSECT."
+  ],
+  [
+    3,
+    "EXCEPT",
+    "EXCEPT retorna elementos da primeira consulta ausentes na segunda.",
+    "SELECT id FROM usinas EXCEPT SELECT usina_id FROM equipamentos;",
+    "Retorne ids de equipamentos que não aparecem em eventos.",
+    "SELECT id FROM equipamentos EXCEPT SELECT equipamento_id FROM eventos",
+    "A ordem das consultas importa."
+  ],
+  [
+    3,
+    "CTEs encadeadas",
+    "CTEs podem alimentar outras CTEs.",
+    "WITH a AS (SELECT * FROM geracao_energia),b AS (SELECT * FROM a WHERE potencia_mw>0) SELECT COUNT(*) FROM b;",
+    "Retorne a soma das potências acima de 100 usando CTE.",
+    "WITH a AS (SELECT potencia_mw FROM geracao_energia WHERE potencia_mw>100) SELECT SUM(potencia_mw) FROM a",
+    "Defina o conjunto antes de somar."
+  ],
+  [
+    3,
+    "Agregação condicional",
+    "FILTER restringe as linhas de uma agregação.",
+    "SELECT COUNT(*) FILTER(WHERE potencia_mw>0) FROM geracao_energia;",
+    "Retorne quantidade operando e quantidade parada, nessa ordem.",
+    "SELECT COUNT(*) FILTER(WHERE potencia_mw>0),COUNT(*) FILTER(WHERE potencia_mw=0) FROM geracao_energia",
+    "Use dois FILTER."
+  ],
+  [
+    3,
+    "Desafio intermediário",
+    "Combine CTE, agregação e filtro.",
+    "WITH t AS(SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id) SELECT * FROM t;",
+    "Retorne usina_id e potência total das usinas acima da média dos totais por usina.",
+    "WITH t AS(SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id) SELECT usina_id,total FROM t WHERE total>(SELECT AVG(total) FROM t)",
+    "Calcule a média dos totais na CTE."
+  ],
+  [
+    4,
+    "RANK",
+    "RANK mantém empates e pula posições.",
+    "SELECT id,RANK() OVER(ORDER BY potencia_mw DESC) FROM geracao_energia;",
+    "Retorne id e ranking por temperatura decrescente, NULL por último.",
+    "SELECT id,RANK() OVER(ORDER BY temperatura_c DESC NULLS LAST) FROM geracao_energia",
+    "NULLS LAST."
+  ],
+  [
+    4,
+    "DENSE_RANK",
+    "DENSE_RANK não pula posições após empates.",
+    "SELECT id,DENSE_RANK() OVER(ORDER BY usina_id) FROM geracao_energia;",
+    "Retorne id e ranking denso por usina_id crescente.",
+    "SELECT id,DENSE_RANK() OVER(ORDER BY usina_id) FROM geracao_energia",
+    "Use DENSE_RANK."
+  ],
+  [
+    4,
+    "LEAD",
+    "LEAD acessa a próxima linha da janela.",
+    "SELECT id,LEAD(potencia_mw) OVER(ORDER BY id) FROM geracao_energia;",
+    "Retorne id e temperatura da próxima linha, ordenando a janela por id.",
+    "SELECT id,LEAD(temperatura_c) OVER(ORDER BY id) FROM geracao_energia",
+    "Use LEAD."
+  ],
+  [
+    4,
+    "Soma acumulada",
+    "Um frame ROWS define linhas da janela.",
+    "SELECT id,SUM(potencia_mw) OVER(ORDER BY id ROWS UNBOUNDED PRECEDING) FROM geracao_energia;",
+    "Retorne id e soma acumulada da potência em ordem de id.",
+    "SELECT id,SUM(potencia_mw) OVER(ORDER BY id ROWS UNBOUNDED PRECEDING) FROM geracao_energia",
+    "Defina ROWS."
+  ],
+  [
+    4,
+    "Média móvel",
+    "Uma janela móvel pode incluir linhas anteriores.",
+    "SELECT id,AVG(potencia_mw) OVER(ORDER BY id ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) FROM geracao_energia;",
+    "Retorne id e média móvel de até três registros por id.",
+    "SELECT id,AVG(potencia_mw) OVER(ORDER BY id ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) FROM geracao_energia",
+    "Duas linhas anteriores mais a atual."
+  ],
+  [
+    4,
+    "NTILE",
+    "NTILE divide linhas em grupos de tamanho semelhante.",
+    "SELECT id,NTILE(2) OVER(ORDER BY id) FROM geracao_energia;",
+    "Retorne id e quartil por potência crescente com desempate por id.",
+    "SELECT id,NTILE(4) OVER(ORDER BY potencia_mw,id) FROM geracao_energia",
+    "NTILE(4)."
+  ],
+  [
+    4,
+    "Datas",
+    "DATE representa uma data sem horário.",
+    "SELECT id,instante::date FROM medicoes;",
+    "Retorne id e data de cada medição.",
+    "SELECT id,CAST(instante AS date) FROM medicoes",
+    "Converta para date."
+  ],
+  [
+    4,
+    "DATE_TRUNC",
+    "DATE_TRUNC reduz a precisão de data ou timestamp.",
+    "SELECT date_trunc('day',instante) FROM medicoes;",
+    "Retorne hora truncada e média de potência por hora.",
+    "SELECT date_trunc('hour',instante),AVG(potencia_mw) FROM medicoes GROUP BY date_trunc('hour',instante)",
+    "Agrupe pela hora truncada."
+  ],
+  [
+    4,
+    "EXTRACT",
+    "EXTRACT extrai componentes do timestamp.",
+    "SELECT EXTRACT(YEAR FROM instante) FROM medicoes;",
+    "Retorne id e hora de cada medição.",
+    "SELECT id,EXTRACT(HOUR FROM instante) FROM medicoes",
+    "Use HOUR."
+  ],
+  [
+    4,
+    "INTERVAL",
+    "INTERVAL representa uma duração.",
+    "SELECT instante+INTERVAL '1 hour' FROM medicoes;",
+    "Retorne id e instante acrescido de 15 minutos.",
+    "SELECT id,instante+INTERVAL '15 minutes' FROM medicoes",
+    "Use INTERVAL."
+  ],
+  [
+    4,
+    "Strings",
+    "UPPER, LOWER e TRIM transformam textos.",
+    "SELECT UPPER(nome) FROM usinas;",
+    "Retorne nome das usinas em maiúsculas.",
+    "SELECT UPPER(nome) FROM usinas",
+    "Use UPPER."
+  ],
+  [
+    4,
+    "CTE recursiva",
+    "WITH RECURSIVE repete um termo até a condição de parada.",
+    "WITH RECURSIVE n(x) AS(VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<3) SELECT x FROM n;",
+    "Gere os inteiros de 1 a 5 usando CTE recursiva.",
+    "WITH RECURSIVE n(x) AS(VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<5) SELECT x FROM n",
+    "A condição deve terminar a recursão."
+  ],
+  [
+    4,
+    "Desafio analítico",
+    "Funções de janela preservam a granularidade.",
+    "SELECT id,ROW_NUMBER() OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC) FROM geracao_energia;",
+    "Retorne usina_id, id e potência da unidade mais potente de cada usina, desempate pelo menor id.",
+    "WITH r AS(SELECT *,ROW_NUMBER() OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC,id) pos FROM geracao_energia) SELECT usina_id,id,potencia_mw FROM r WHERE pos=1",
+    "Numere por usina e filtre pos=1."
+  ],
+  [
+    5,
+    "CREATE TABLE",
+    "CREATE TABLE define estrutura e tipos.",
+    "CREATE TABLE exemplo(id INT PRIMARY KEY);",
+    "Crie cadastro_teste com coluna id inteira e chave primária.",
+    "CREATE TABLE cadastro_teste(id INT PRIMARY KEY)",
+    "Use CREATE TABLE e PRIMARY KEY.",
+    false,
+    "SELECT column_name,data_type,is_nullable FROM information_schema.columns WHERE table_name='cadastro_teste' ORDER BY ordinal_position"
+  ],
+  [
+    5,
+    "INSERT",
+    "INSERT adiciona registros.",
+    "INSERT INTO treino VALUES(4,'Nova',40);",
+    "Insira em treino o registro (4,'Nova',40).",
+    "INSERT INTO treino VALUES(4,'Nova',40)",
+    "Use VALUES.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    5,
+    "UPDATE",
+    "UPDATE altera registros; WHERE restringe a alteração.",
+    "UPDATE treino SET valor=15 WHERE id=1;",
+    "Altere apenas o valor do registro 2 para 99.",
+    "UPDATE treino SET valor=99 WHERE id=2",
+    "Não esqueça WHERE.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    5,
+    "DELETE",
+    "DELETE remove registros selecionados.",
+    "DELETE FROM treino WHERE id=1;",
+    "Remova apenas o registro de id 3.",
+    "DELETE FROM treino WHERE id=3",
+    "Restrinja com WHERE.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    5,
+    "ALTER TABLE",
+    "ALTER TABLE modifica a estrutura.",
+    "ALTER TABLE treino ADD COLUMN status TEXT;",
+    "Adicione a coluna status de tipo text à tabela treino.",
+    "ALTER TABLE treino ADD COLUMN status TEXT",
+    "Use ADD COLUMN.",
+    false,
+    "SELECT column_name,data_type FROM information_schema.columns WHERE table_name='treino' ORDER BY ordinal_position"
+  ],
+  [
+    5,
+    "TRUNCATE",
+    "TRUNCATE esvazia a tabela sem apagar sua estrutura.",
+    "TRUNCATE TABLE treino;",
+    "Esvazie completamente a tabela treino.",
+    "TRUNCATE TABLE treino",
+    "Use TRUNCATE; apenas no sandbox.",
+    false,
+    "SELECT COUNT(*) FROM treino"
+  ],
+  [
+    5,
+    "DROP TABLE",
+    "DROP TABLE remove uma tabela e sua estrutura.",
+    "DROP TABLE treino;",
+    "Remova a tabela treino do banco de treinamento.",
+    "DROP TABLE treino",
+    "Nunca execute em produção sem autorização.",
+    false,
+    "SELECT table_name FROM information_schema.tables WHERE table_name='treino'"
+  ],
+  [
+    5,
+    "FOREIGN KEY",
+    "Uma FK protege a integridade referencial.",
+    "CREATE TABLE teste_fk(id INT,usina_id INT REFERENCES usinas(id));",
+    "Crie teste_fk com id inteiro e usina_id inteiro referenciando usinas(id).",
+    "CREATE TABLE teste_fk(id INT,usina_id INT REFERENCES usinas(id))",
+    "Use REFERENCES.",
+    false,
+    "SELECT constraint_type FROM information_schema.table_constraints WHERE table_name='teste_fk' ORDER BY constraint_type"
+  ],
+  [
+    5,
+    "UNIQUE",
+    "UNIQUE evita valores duplicados.",
+    "ALTER TABLE treino ADD UNIQUE(nome);",
+    "Adicione uma restrição UNIQUE à coluna nome de treino.",
+    "ALTER TABLE treino ADD UNIQUE(nome)",
+    "Use ADD UNIQUE.",
+    false,
+    "SELECT constraint_type FROM information_schema.table_constraints WHERE table_name='treino' ORDER BY constraint_type"
+  ],
+  [
+    5,
+    "Views",
+    "VIEW guarda uma consulta reutilizável.",
+    "CREATE VIEW operando AS SELECT * FROM geracao_energia WHERE potencia_mw>0;",
+    "Crie a view operando com todos os campos das unidades com potência positiva.",
+    "CREATE VIEW operando AS SELECT * FROM geracao_energia WHERE potencia_mw>0",
+    "Use CREATE VIEW AS.",
+    false,
+    "SELECT * FROM operando"
+  ],
+  [
+    5,
+    "Materialized views",
+    "Uma materialized view persiste os resultados até REFRESH.",
+    "CREATE MATERIALIZED VIEW totais AS SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id;",
+    "Crie a materialized view totais com usina_id e soma da potência como total.",
+    "CREATE MATERIALIZED VIEW totais AS SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id",
+    "Use CREATE MATERIALIZED VIEW.",
+    false,
+    "SELECT * FROM totais"
+  ],
+  [
+    5,
+    "Transações e ROLLBACK",
+    "BEGIN inicia uma transação; ROLLBACK desfaz alterações não confirmadas.",
+    "BEGIN; UPDATE treino SET valor=0; ROLLBACK;",
+    "Inicie uma transação, altere o valor de todos os registros para zero e desfaça com ROLLBACK.",
+    "BEGIN; UPDATE treino SET valor=0; ROLLBACK;",
+    "Use os três comandos.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    6,
+    "Índices",
+    "Um índice pode acelerar buscas seletivas ao custo de escrita.",
+    "CREATE INDEX idx_treino_valor ON treino(valor);",
+    "Crie o índice idx_treino_valor sobre valor em treino.",
+    "CREATE INDEX idx_treino_valor ON treino(valor)",
+    "Use CREATE INDEX ... ON.",
+    false,
+    "SELECT indexname FROM pg_indexes WHERE tablename='treino' ORDER BY indexname"
+  ],
+  [
+    6,
+    "EXPLAIN",
+    "EXPLAIN exibe o plano estimado sem executar a consulta.",
+    "EXPLAIN SELECT * FROM treino WHERE id=1;",
+    "Use EXPLAIN para analisar a consulta de treino por id=2.",
+    "EXPLAIN SELECT * FROM treino WHERE id=2",
+    "EXPLAIN antes do SELECT."
+  ],
+  [
+    6,
+    "EXPLAIN ANALYZE",
+    "EXPLAIN ANALYZE executa e mede a consulta. Cuidado com escritas.",
+    "EXPLAIN ANALYZE SELECT * FROM treino WHERE id=1;",
+    "Analise a consulta SELECT * FROM treino WHERE id=2 com EXPLAIN ANALYZE.",
+    "EXPLAIN ANALYZE SELECT * FROM treino WHERE id=2",
+    "Use EXPLAIN ANALYZE."
+  ],
+  [
+    6,
+    "Predicados indexáveis",
+    "Evite aplicar funções desnecessárias sobre colunas filtradas.",
+    "SELECT id FROM medicoes WHERE instante >= TIMESTAMP '2026-01-01' AND instante < TIMESTAMP '2026-01-02';",
+    "Retorne ids das medições de 1 de janeiro de 2026 usando intervalo semiaberto.",
+    "SELECT id FROM medicoes WHERE instante>=TIMESTAMP '2026-01-01' AND instante<TIMESTAMP '2026-01-02'",
+    "Use >= e <."
+  ],
+  [
+    6,
+    "Projeção eficiente",
+    "Leia somente as colunas necessárias ao consumo.",
+    "SELECT id,instante FROM medicoes;",
+    "Retorne apenas instante e potência das medições.",
+    "SELECT instante,potencia_mw FROM medicoes",
+    "Evite SELECT *."
+  ],
+  [
+    6,
+    "Deduplicação",
+    "ROW_NUMBER ajuda a manter o registro mais recente de cada chave.",
+    "SELECT id,ROW_NUMBER() OVER(PARTITION BY equipamento_id,instante ORDER BY id DESC) FROM medicoes;",
+    "Retorne id de uma medição por equipamento e instante, mantendo o maior id.",
+    "WITH r AS(SELECT id,ROW_NUMBER() OVER(PARTITION BY equipamento_id,instante ORDER BY id DESC) n FROM medicoes) SELECT id FROM r WHERE n=1",
+    "Particione pela chave lógica."
+  ],
+  [
+    6,
+    "Ingestão incremental",
+    "Watermarks filtram dados posteriores ao último processamento.",
+    "SELECT * FROM medicoes WHERE instante>TIMESTAMP '2026-01-01 08:00';",
+    "Retorne todos os campos das medições posteriores a 08:30 de 1 de janeiro de 2026.",
+    "SELECT * FROM medicoes WHERE instante>TIMESTAMP '2026-01-01 08:30'",
+    "Use comparação estrita."
+  ],
+  [
+    6,
+    "UPSERT",
+    "ON CONFLICT permite inserir ou atualizar de modo idempotente.",
+    "INSERT INTO treino VALUES(1,'A',20) ON CONFLICT(id) DO UPDATE SET valor=EXCLUDED.valor;",
+    "Faça upsert do registro (2,'B',55), atualizando valor em caso de conflito por id.",
+    "INSERT INTO treino VALUES(2,'B',55) ON CONFLICT(id) DO UPDATE SET valor=EXCLUDED.valor",
+    "Use EXCLUDED.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    6,
+    "Validação de qualidade",
+    "Valide faixas e obrigatoriedade antes da camada Silver.",
+    "SELECT id FROM medicoes WHERE potencia_mw IS NULL OR potencia_mw<0;",
+    "Retorne ids de medições com potência nula ou negativa.",
+    "SELECT id FROM medicoes WHERE potencia_mw IS NULL OR potencia_mw<0",
+    "Combine IS NULL e OR."
+  ],
+  [
+    6,
+    "Integridade de dados",
+    "Anti-joins detectam referências órfãs.",
+    "SELECT a.id FROM eventos a LEFT JOIN equipamentos e ON a.equipamento_id=e.id WHERE e.id IS NULL;",
+    "Retorne ids de eventos cuja referência de equipamento é preenchida mas inexistente.",
+    "SELECT a.id FROM eventos a LEFT JOIN equipamentos e ON a.equipamento_id=e.id WHERE a.equipamento_id IS NOT NULL AND e.id IS NULL",
+    "Distinga referência nula de órfã."
+  ],
+  [
+    6,
+    "Camada Bronze",
+    "Bronze mantém dados brutos; derive métricas sem sobrescrever a origem.",
+    "SELECT COUNT(*) FROM medicoes;",
+    "Retorne equipamento_id e quantidade de medições brutas por equipamento.",
+    "SELECT equipamento_id,COUNT(*) FROM medicoes GROUP BY equipamento_id",
+    "Agrupe sem deduplicar."
+  ],
+  [
+    6,
+    "Séries temporais",
+    "LAG calcula mudanças entre instantes de uma mesma série.",
+    "SELECT id,potencia_mw-LAG(potencia_mw) OVER(PARTITION BY equipamento_id ORDER BY instante,id) FROM medicoes;",
+    "Retorne id e diferença de potência para a medição anterior do mesmo equipamento, ordenando por instante e id.",
+    "SELECT id,potencia_mw-LAG(potencia_mw) OVER(PARTITION BY equipamento_id ORDER BY instante,id) FROM medicoes",
+    "Use PARTITION BY e LAG."
+  ],
+  [
+    6,
+    "Indicador de disponibilidade",
+    "Agregações condicionais permitem calcular proporções.",
+    "SELECT COUNT(*) FILTER(WHERE potencia_mw>0)*100.0/COUNT(*) FROM geracao_energia;",
+    "Retorne usina_id e percentual de unidades com potência positiva sobre o total de unidades cadastradas.",
+    "SELECT usina_id,COUNT(*) FILTER(WHERE potencia_mw>0)*100.0/COUNT(*) FROM geracao_energia GROUP BY usina_id",
+    "Use 100.0 para divisão decimal."
+  ],
+  [
+    6,
+    "Desafio final: pipeline",
+    "Deduplicar, validar e agregar são etapas típicas de ELT.",
+    "WITH r AS(SELECT *,ROW_NUMBER() OVER(PARTITION BY equipamento_id,instante ORDER BY id DESC) n FROM medicoes) SELECT * FROM r WHERE n=1;",
+    "Deduplicate por equipamento e instante mantendo maior id, descarte potências nulas ou negativas e retorne equipamento_id e potência média válida.",
+    "WITH r AS(SELECT *,ROW_NUMBER() OVER(PARTITION BY equipamento_id,instante ORDER BY id DESC) n FROM medicoes) SELECT equipamento_id,AVG(potencia_mw) FROM r WHERE n=1 AND potencia_mw>=0 GROUP BY equipamento_id",
+    "Use CTE, ROW_NUMBER, filtro e GROUP BY."
+  ]
+];
+for(const [module,title,theory,example,task,answer,hint,ordered,verify] of extra)lessons.push({id:lessons.length,module,title,theory,example,task,answer,hint,ordered:!!ordered,verify});
+export const sequence=lessons.slice().sort((a,b)=>a.module-b.module||a.id-b.id).map(l=>l.id);
