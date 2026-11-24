@@ -1,4 +1,4 @@
-const SHELL='sqlingo-shell-v3',ENGINE='sqlingo-engine-v1';
+const SHELL='sqlingo-shell-v4',ENGINE='sqlingo-engine-v1';
 const ASSETS=['/','/style.css','/app.js','/offline.js','/icon.svg','/mascot.webp','/manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(SHELL).then(c=>c.addAll(ASSETS.map(x=>new Request(x,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('sqlingo-')&&![SHELL,ENGINE].includes(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
