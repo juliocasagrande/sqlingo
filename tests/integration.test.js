@@ -5,7 +5,7 @@ const child=spawn(process.execPath,['server.js'],{env:{...process.env,PORT:Strin
 async function call(path,body,cookie){const r=await fetch(base+path,{method:body===undefined?'GET':'POST',headers:{...(body===undefined?{}:{'Content-Type':'application/json'}),...(cookie?{Cookie:cookie}:{})},body:body===undefined?undefined:JSON.stringify(body)});return {status:r.status,body:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]};}
 try{
 let healthy=false;for(let i=0;i<40;i++){try{if((await fetch(base+'/health')).ok){healthy=true;break}}catch{}await new Promise(r=>setTimeout(r,500));}assert.ok(healthy,'server starts');
-const course=await call('/api/lessons');assert.equal(course.body.lessons.length,94);assert.ok(!('answer' in course.body.lessons[0]));assert.equal((await call('/api/me')).status,401);
+const course=await call('/api/lessons');assert.equal(course.body.lessons.length,110);assert.ok(!('answer' in course.body.lessons[0]));assert.equal((await call('/api/me')).status,401);
 const password='TestPasswordOnly123!';
 const a=await call('/api/auth/register',{handle:'test_learner_a',password}),b=await call('/api/auth/register',{handle:'test_learner_b',password});assert.equal(a.status,200);assert.equal(b.status,200);
 const A=a.cookie,B=b.cookie;const pack=await call('/api/offline/0',undefined,A);assert.equal(pack.status,200);assert.equal(pack.body.lessons.length,12);assert.equal((await call('/api/offline/0')).status,401);let m=(await call('/api/me',undefined,A)).body;assert.equal(m.xp,0);assert.ok(!('hearts' in m));

@@ -677,6 +677,154 @@ const extra=[
     "Deduplicate por equipamento e instante mantendo maior id, descarte potências nulas ou negativas e retorne equipamento_id e potência média válida.",
     "WITH r AS(SELECT *,ROW_NUMBER() OVER(PARTITION BY equipamento_id,instante ORDER BY id DESC) n FROM medicoes) SELECT equipamento_id,AVG(potencia_mw) FROM r WHERE n=1 AND potencia_mw>=0 GROUP BY equipamento_id",
     "Use CTE, ROW_NUMBER, filtro e GROUP BY."
+  ],
+  [
+    1,
+    "STRING_AGG",
+    "STRING_AGG concatena textos de um grupo com um separador.",
+    "SELECT usina_id,STRING_AGG(unidade,', ' ORDER BY unidade) FROM geracao_energia GROUP BY usina_id;",
+    "Retorne usina_id e os nomes dos equipamentos concatenados por vírgula e espaço em ordem alfabética.",
+    "SELECT usina_id,STRING_AGG(nome,', ' ORDER BY nome) FROM equipamentos GROUP BY usina_id",
+    "Use STRING_AGG(nome, ', ' ORDER BY nome)."
+  ],
+  [
+    1,
+    "ROLLUP",
+    "ROLLUP gera subtotais hierárquicos e o total geral na mesma consulta.",
+    "SELECT usina_id,COUNT(*) FROM geracao_energia GROUP BY ROLLUP(usina_id);",
+    "Retorne usina_id e soma da potência por usina incluindo o total geral com ROLLUP.",
+    "SELECT usina_id,SUM(potencia_mw) FROM geracao_energia GROUP BY ROLLUP(usina_id)",
+    "Use GROUP BY ROLLUP(usina_id)."
+  ],
+  [
+    3,
+    "Múltiplas CTEs com JOIN",
+    "Você pode declarar várias CTEs separadas por vírgula e combiná-las com JOIN.",
+    "WITH pot AS(SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id),eq AS(SELECT usina_id,COUNT(*) qtd FROM equipamentos GROUP BY usina_id) SELECT pot.usina_id,pot.total,eq.qtd FROM pot JOIN eq ON pot.usina_id=eq.usina_id;",
+    "Crie duas CTEs — soma da potência por usina e contagem de equipamentos por usina — e retorne nome da usina, soma da potência e contagem de equipamentos (zero se ausente).",
+    "WITH pot AS(SELECT usina_id,SUM(potencia_mw) total FROM geracao_energia GROUP BY usina_id),eq AS(SELECT usina_id,COUNT(*) qtd FROM equipamentos GROUP BY usina_id) SELECT u.nome,COALESCE(pot.total,0),COALESCE(eq.qtd,0) FROM usinas u LEFT JOIN pot ON u.id=pot.usina_id LEFT JOIN eq ON u.id=eq.usina_id",
+    "Combine usinas com as duas CTEs usando LEFT JOIN e COALESCE."
+  ],
+  [
+    3,
+    "LATERAL JOIN",
+    "LATERAL permite que uma subconsulta no FROM referencie colunas das tabelas anteriores.",
+    "SELECT u.nome,top.unidade FROM usinas u JOIN LATERAL(SELECT unidade FROM geracao_energia g WHERE g.usina_id=u.id ORDER BY potencia_mw DESC LIMIT 1) top ON true;",
+    "Use LATERAL para retornar o nome de cada usina e a maior potência registrada nela.",
+    "SELECT u.nome,top.potencia_mw FROM usinas u JOIN LATERAL(SELECT potencia_mw FROM geracao_energia g WHERE g.usina_id=u.id ORDER BY potencia_mw DESC LIMIT 1) top ON true",
+    "Use JOIN LATERAL (...) top ON true com ORDER BY e LIMIT 1."
+  ],
+  [
+    4,
+    "FIRST_VALUE",
+    "FIRST_VALUE retorna o primeiro valor de cada janela ordenada.",
+    "SELECT id,FIRST_VALUE(unidade) OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC,id) FROM geracao_energia;",
+    "Retorne id e a maior potência da mesma usina em cada linha usando FIRST_VALUE.",
+    "SELECT id,FIRST_VALUE(potencia_mw) OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC,id) FROM geracao_energia",
+    "Ordene a partição por potencia_mw DESC, id."
+  ],
+  [
+    4,
+    "LAST_VALUE e frame completo",
+    "Por padrão o frame termina na linha atual; para LAST_VALUE na partição inteira, use UNBOUNDED FOLLOWING.",
+    "SELECT id,LAST_VALUE(unidade) OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC,id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM geracao_energia;",
+    "Retorne id e a menor potência da respectiva usina em cada linha usando LAST_VALUE com frame completo.",
+    "SELECT id,LAST_VALUE(potencia_mw) OVER(PARTITION BY usina_id ORDER BY potencia_mw DESC,id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FROM geracao_energia",
+    "Inclua ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING."
+  ],
+  [
+    4,
+    "LAG com valor padrão",
+    "LAG aceita deslocamento e valor padrão para substituir NULL na primeira linha da janela.",
+    "SELECT id,LAG(potencia_mw,1,0) OVER(ORDER BY id) FROM geracao_energia;",
+    "Retorne id e a potência da linha anterior na mesma usina (ordenada por id), usando 0 quando não houver anterior.",
+    "SELECT id,LAG(potencia_mw,1,0) OVER(PARTITION BY usina_id ORDER BY id) FROM geracao_energia",
+    "Use LAG(potencia_mw, 1, 0) com PARTITION BY usina_id."
+  ],
+  [
+    4,
+    "PERCENT_RANK",
+    "PERCENT_RANK calcula a posição relativa de cada linha entre 0 e 1.",
+    "SELECT id,ROUND(PERCENT_RANK() OVER(ORDER BY potencia_mw)::numeric,2) FROM geracao_energia;",
+    "Retorne id e o PERCENT_RANK por potência crescente arredondado para 2 casas decimais.",
+    "SELECT id,ROUND(PERCENT_RANK() OVER(ORDER BY potencia_mw)::numeric,2) FROM geracao_energia",
+    "Converta para numeric antes de usar ROUND(..., 2)."
+  ],
+  [
+    4,
+    "CUME_DIST",
+    "CUME_DIST indica a fração acumulada de linhas com valor menor ou igual ao atual.",
+    "SELECT id,ROUND(CUME_DIST() OVER(ORDER BY potencia_mw)::numeric,2) FROM geracao_energia;",
+    "Retorne id e a distribuição acumulada (CUME_DIST) por potência crescente arredondada para 2 casas.",
+    "SELECT id,ROUND(CUME_DIST() OVER(ORDER BY potencia_mw)::numeric,2) FROM geracao_energia",
+    "Use ROUND(CUME_DIST() OVER(ORDER BY potencia_mw)::numeric, 2)."
+  ],
+  [
+    4,
+    "Participação percentual na janela",
+    "Dividir o valor da linha por SUM(...) OVER(...) calcula a participação sem perder o detalhe.",
+    "SELECT id,ROUND(potencia_mw*100.0/SUM(potencia_mw) OVER(),2) FROM geracao_energia;",
+    "Retorne id e o percentual de potência de cada unidade em relação ao total da própria usina, arredondado em 2 casas.",
+    "SELECT id,ROUND(potencia_mw*100.0/SUM(potencia_mw) OVER(PARTITION BY usina_id),2) FROM geracao_energia",
+    "Divida potencia_mw * 100.0 por SUM(potencia_mw) OVER(PARTITION BY usina_id)."
+  ],
+  [
+    4,
+    "Cláusula WINDOW nomeada",
+    "A cláusula WINDOW nomeia uma especificação de janela para reutilizá-la em várias funções.",
+    "SELECT id,SUM(potencia_mw) OVER w,AVG(potencia_mw) OVER w FROM geracao_energia WINDOW w AS(PARTITION BY usina_id);",
+    "Usando uma janela nomeada por usina_id, retorne id, soma e média da potência da respectiva usina.",
+    "SELECT id,SUM(potencia_mw) OVER w,AVG(potencia_mw) OVER w FROM geracao_energia WINDOW w AS(PARTITION BY usina_id)",
+    "Declare WINDOW w AS (PARTITION BY usina_id) ao final."
+  ],
+  [
+    5,
+    "CHECK e DEFAULT",
+    "CHECK valida regras de domínio e DEFAULT define valores automáticos na inserção.",
+    "CREATE TABLE sensores(id INT PRIMARY KEY,ativo BOOLEAN DEFAULT true,leitura INT CHECK(leitura>=0));",
+    "Crie a tabela sensores com id inteiro PK, ativo booleano com DEFAULT true e leitura inteira com CHECK(leitura >= 0).",
+    "CREATE TABLE sensores(id INT PRIMARY KEY,ativo BOOLEAN DEFAULT true,leitura INT CHECK(leitura>=0))",
+    "Use PRIMARY KEY, DEFAULT true e CHECK(leitura >= 0).",
+    false,
+    "SELECT column_name,column_default FROM information_schema.columns WHERE table_name='sensores' ORDER BY ordinal_position"
+  ],
+  [
+    5,
+    "INSERT com RETURNING",
+    "RETURNING devolve as linhas inseridas ou alteradas no mesmo comando DML.",
+    "INSERT INTO treino VALUES(4,'D',40) RETURNING id,nome;",
+    "Insira em treino o registro (5,'E',50) usando INSERT ... RETURNING id, valor.",
+    "INSERT INTO treino VALUES(5,'E',50) RETURNING id,valor",
+    "Adicione RETURNING id, valor ao final do INSERT.",
+    false,
+    "SELECT * FROM treino ORDER BY id"
+  ],
+  [
+    6,
+    "GROUPING SETS",
+    "GROUPING SETS calcula múltiplos níveis de agregação em uma única varredura.",
+    "SELECT usina_id,unidade,SUM(potencia_mw) FROM geracao_energia GROUP BY GROUPING SETS((usina_id),(unidade),());",
+    "Retorne usina_id e soma da potência agrupando por usina_id e também o total geral usando GROUPING SETS.",
+    "SELECT usina_id,SUM(potencia_mw) FROM geracao_energia GROUP BY GROUPING SETS((usina_id),())",
+    "Use GROUP BY GROUPING SETS((usina_id), ())."
+  ],
+  [
+    6,
+    "JSONB",
+    "PostgreSQL manipula dados semiestruturados com JSONB, jsonb_build_object e o operador ->>.",
+    "SELECT id,jsonb_build_object('unidade',unidade,'mw',potencia_mw)->>'unidade' FROM geracao_energia;",
+    "Retorne id e o campo 'nome' extraído como texto de um jsonb_build_object('nome', nome) para cada usina.",
+    "SELECT id,jsonb_build_object('nome',nome)->>'nome' FROM usinas",
+    "Use jsonb_build_object('nome', nome)->>'nome'."
+  ],
+  [
+    6,
+    "ARRAY_AGG",
+    "ARRAY_AGG agrupa valores de um grupo em um array ordenado.",
+    "SELECT usina_id,ARRAY_AGG(unidade ORDER BY unidade) FROM geracao_energia GROUP BY usina_id;",
+    "Retorne usina_id e o array de nomes de equipamentos ordenados alfabeticamente por usina.",
+    "SELECT usina_id,ARRAY_AGG(nome ORDER BY nome) FROM equipamentos GROUP BY usina_id",
+    "Use ARRAY_AGG(nome ORDER BY nome)."
   ]
 ];
 for(const [module,title,theory,example,task,answer,hint,ordered,verify] of extra)lessons.push({id:lessons.length,module,title,theory,example,task,answer,hint,ordered:!!ordered,verify});
