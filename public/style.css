@@ -344,6 +344,7 @@ textarea {
   --world-pale-2: #e2f7d0;
   --world-route: #b6e595;
   --world-scene: url('/art/world-emerald.webp');
+  --world-trail: url('/art/trail-emerald.webp');
   margin-block: 26px 36px;
 }
 .world-amber {
@@ -353,6 +354,7 @@ textarea {
   --world-pale-2: #ffedc9;
   --world-route: #f5cd82;
   --world-scene: url('/art/world-amber.webp');
+  --world-trail: url('/art/trail-amber.webp');
 }
 .world-teal {
   --world-accent: #00b894;
@@ -361,6 +363,7 @@ textarea {
   --world-pale-2: #cef5ec;
   --world-route: #8be0ce;
   --world-scene: url('/art/world-teal.webp');
+  --world-trail: url('/art/trail-teal.webp');
 }
 .world-violet {
   --world-accent: #a55eea;
@@ -369,6 +372,7 @@ textarea {
   --world-pale-2: #eadbfa;
   --world-route: #caa4f0;
   --world-scene: url('/art/world-violet.webp');
+  --world-trail: url('/art/trail-violet.webp');
 }
 .world-blue {
   --world-accent: #1cb0f6;
@@ -377,6 +381,7 @@ textarea {
   --world-pale-2: #d3eefc;
   --world-route: #8fd2f7;
   --world-scene: url('/art/world-blue.webp');
+  --world-trail: url('/art/trail-blue.webp');
 }
 .world-rose {
   --world-accent: #ff6b6b;
@@ -385,6 +390,7 @@ textarea {
   --world-pale-2: #ffe0dd;
   --world-route: #f5b0aa;
   --world-scene: url('/art/world-rose.webp');
+  --world-trail: url('/art/trail-rose.webp');
 }
 .world-indigo {
   --world-accent: #6366f1;
@@ -393,6 +399,7 @@ textarea {
   --world-pale-2: #dce0ff;
   --world-route: #aab0f7;
   --world-scene: url('/art/world-indigo.webp');
+  --world-trail: url('/art/trail-indigo.webp');
 }
 
 /* Duolingo Unit Header Banner */
@@ -491,7 +498,7 @@ textarea {
 }
 .world-caption span { color: var(--world-accent); }
 
-/* Illustrated World Path Canvas */
+/* Single Continuous Full-Height Illustrated World Map */
 .world-path {
   display: block;
   position: relative;
@@ -499,9 +506,33 @@ textarea {
   padding: 44px 0 18px;
   border: 2px solid color-mix(in srgb, var(--world-route) 72%, #fff);
   border-radius: 26px;
-  background: linear-gradient(180deg, var(--world-pale) 0%, var(--world-pale-2) 50%, var(--world-pale) 100%);
+  background: var(--world-pale);
   box-shadow: 0 4px 0 color-mix(in srgb, var(--world-route) 65%, #fff);
   overflow: hidden;
+}
+.world-path::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--world-trail);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: .84;
+  pointer-events: none;
+}
+.world-path::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .06) 0%, rgba(255, 255, 255, .26) 50%, rgba(255, 255, 255, .06) 100%);
+  pointer-events: none;
+}
+.learning-world[data-scene="night"] .world-path::before { opacity: .82; }
+.learning-world[data-scene="night"] .world-path::after {
+  background: linear-gradient(90deg, rgba(16, 12, 34, .08) 0%, rgba(255, 255, 255, .14) 50%, rgba(16, 12, 34, .08) 100%);
 }
 .world-route {
   position: absolute;
@@ -513,8 +544,8 @@ textarea {
   overflow: visible;
 }
 .world-route path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.route-base { stroke: var(--world-route); stroke-width: 11; opacity: .88; }
-.route-dots { stroke: #fff; stroke-width: 3; stroke-dasharray: 4 12; opacity: .95; }
+.route-base { stroke: var(--world-route); stroke-width: 11; opacity: .9; }
+.route-dots { stroke: #fff; stroke-width: 3; stroke-dasharray: 4 12; opacity: .96; }
 
 .world-row {
   height: 148px;
@@ -524,25 +555,6 @@ textarea {
   align-items: flex-start;
   padding-top: 8px;
 }
-
-/* Crisp High-Res Scenic Windows along the Trail */
-.world-vista {
-  position: absolute;
-  inset: -78px 0 -78px;
-  z-index: 0;
-  background-image: var(--world-scene);
-  background-size: cover;
-  background-position: center 50%;
-  opacity: .64;
-  mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
-  -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
-  pointer-events: none;
-}
-.world-vista.vista-top { inset: -44px 0 -86px; background-position: center 22%; opacity: .72; }
-.world-vista.vista-mid { background-position: center 55%; opacity: .58; }
-.world-vista.vista-end { inset: -86px 0 -22px; background-position: center 80%; opacity: .7; }
-.learning-world[data-scene="night"] .world-vista { opacity: .52; }
-.learning-world[data-scene="night"] .world-vista.vista-top { opacity: .6; }
 
 /* Iconic Duolingo 3D Stepping-Stone Lesson Nodes */
 .world-node {
